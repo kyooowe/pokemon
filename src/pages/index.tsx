@@ -207,8 +207,8 @@ const Page: NextPageWithLayout = () => {
 				{
 					data?.results.map((pokeBasic: IPokemonBasic, i) => {
 						return (
-							<Grid.Col xs={6} sm={6} md={4} lg={4}>
-								<PCard name={pokeBasic.name} url={pokeBasic.url} loading={isChildLoading} setLoading={setIsChildLoading} key={i} />
+							<Grid.Col xs={6} sm={6} md={4} lg={4} key={i}>
+								<PCard name={pokeBasic.name} url={pokeBasic.url} loading={isChildLoading} setLoading={setIsChildLoading} />
 							</Grid.Col>
 						)
 					})
