@@ -1,9 +1,11 @@
-//#endregion Import
+//#region Import
 import AppLayout from "@/core/layout";
 import { ReactElement } from "react";
 import { NextPageWithLayout } from "../_app";
 import { createStyles, Title, Text, Button, Container, Group } from '@mantine/core';
 //#endregion
+
+//#region Styles
 const useStyles = createStyles((theme) => ({
     root: {
         paddingTop: 80,
@@ -41,8 +43,6 @@ const useStyles = createStyles((theme) => ({
         marginBottom: theme.spacing.xl * 1.5,
     },
 }));
-//#region Styles
-
 //#endregion
 
 const Page: NextPageWithLayout = () => {
