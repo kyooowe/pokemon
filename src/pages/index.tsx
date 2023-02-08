@@ -1,8 +1,6 @@
 //#region Imports
 import { useEffect, useState } from 'react';
-import Banner from '@/core/components/_banner';
 import PCard from '@/core/components/_card';
-import { IPCard } from '@/core/interface/PCard';
 import AppLayout from '@/core/layout';
 import {
 	ActionIcon,
@@ -26,6 +24,7 @@ import { pokemonService } from './api/pokemonService'
 import { useQueries, useQuery, useIsFetching } from 'react-query';
 import { motion } from "framer-motion";
 import { IApiResult, IPokemonBasic } from '@/core/interface/Pokemon';
+import { useRouter } from 'next/router';
 
 const { fetchPokemons } = pokemonService
 //#endregion
@@ -63,6 +62,7 @@ const Page: NextPageWithLayout = () => {
 	const { classes, cx } = useStyles();
 	const theme = useMantineTheme();
 	const isFetching = useIsFetching();
+	const router = useRouter();
 
 	useKey('ArrowLeft', () => alert('You click arrow left'))
 	useKey('ArrowRight', () => alert('You click arrow right'))
@@ -79,6 +79,9 @@ const Page: NextPageWithLayout = () => {
 
 	// Child Component: Card
 	const [isChildLoading, setIsChildLoading] = useState<boolean>(false)
+
+	// Search
+	const [searchKey, setSearchKey] = useState<string>("")
 
 	//#endregion
 
@@ -136,6 +139,12 @@ const Page: NextPageWithLayout = () => {
 		setOffset(0)
 		setInitialPage(1)
 	}
+
+	const handleSearch = () => {
+		if(searchKey !== "") {
+			router.push(`/pokemon-details?name=${searchKey}`)
+		}
+	}
 	//#endregion
 
 	return (
@@ -155,8 +164,9 @@ const Page: NextPageWithLayout = () => {
 					radius="xl"
 					size="md"
 					className={classes.input}
+					onChange={(e) => setSearchKey(e.target.value)}
 					rightSection={
-						<ActionIcon size={32} radius="xl" color={theme.primaryColor} variant="filled">
+						<ActionIcon size={32} radius="xl" color={theme.primaryColor} variant="filled" onClick={handleSearch} disabled={isChildLoading}>
 							<ArrowRight size={18} strokeWidth={1.5} />
 						</ActionIcon>
 					}
