@@ -154,10 +154,9 @@ const Page: NextPageWithLayout = () => {
     ))
 
     const moves = data?.moves.map((e, i) => (
-        <Grid.Col span={1}>
+        <Grid.Col span={1} key={i}>
             <Badge
                 color={generateRandomColor()}
-                key={i}
                 sx={{ cursor: 'pointer' }}
                 onClick={() => handleMoveBadgeClick(e.move.url, e.move.name)}
             >
