@@ -9,27 +9,28 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 //#region Styles
 import "../styles/globals.css"
 import customFontTheme from "../styles/fonts"
+import { AnimatePresence } from 'framer-motion';
 //#endregion
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
-  getLayout?: (page: ReactElement) => ReactNode
+	getLayout?: (page: ReactElement) => ReactNode
 }
 
 type AppPropsWithLayout = AppProps & {
-  Component: NextPageWithLayout
+	Component: NextPageWithLayout
 }
 
 export default function MyApp({ Component, pageProps }: AppPropsWithLayout) {
-  // Use the layout defined at the page level, if available
-  const getLayout = Component.getLayout ?? ((page) => page)
-  const queryClient = new QueryClient();
+	// Use the layout defined at the page level, if available
+	const getLayout = Component.getLayout ?? ((page) => page)
+	const queryClient = new QueryClient();
 
-  return getLayout(
-    <MantineProvider withNormalizeCSS withGlobalStyles theme={customFontTheme}
-    >
-      <QueryClientProvider client={queryClient}>
-        <Component {...pageProps} />
-      </QueryClientProvider>
-    </MantineProvider>
-  )
+	return getLayout(
+		<MantineProvider withNormalizeCSS withGlobalStyles theme={customFontTheme}
+		>
+			<QueryClientProvider client={queryClient}>
+				<Component {...pageProps} />
+			</QueryClientProvider>
+		</MantineProvider>
+	)
 }

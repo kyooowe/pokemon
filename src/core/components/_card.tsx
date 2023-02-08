@@ -5,10 +5,13 @@ import { useQuery } from 'react-query';
 import { Heart } from 'tabler-icons-react';
 import { IPCard } from '../interface/PCard';
 import { motion } from "framer-motion";
+import { useRouter } from 'next/router';
 import { IPokemonBasic } from '../interface/Pokemon';
+import { helpers } from '../helpers/helper';
 import { pokemonService } from '@/pages/api/pokemonService';
 
 const { fetchPokemon } = pokemonService;
+const { getProperPokemonBadgeColor, getProperPokemonBadgeEmoji, getProperPokemonImg } = helpers
 //#endregion
 
 //#region Styles
@@ -41,150 +44,44 @@ const PCard = ({ name, url, loading, setLoading }: IPokemonBasic) => {
 
     //#region State Helper
     const { classes, theme } = useStyles();
+    const router = useRouter();
     //#endregion
 
     //#region Queries
     const { data, isLoading } = useQuery<IPCard>(name.toUpperCase(), () => fetchPokemon(url))
 
     if (isLoading) setLoading(true)
-    //#endregion
 
-    //#region Helper
-    const PokemonImg = (img: string | undefined) => {
-        if (img === null || img === undefined)
-            return "/pokeball.png"
-        else
-            return img;
-    }
-
-    const PokemonTypeBadgeColor = (type: string) => {
-        if (type === 'FIRE')
-            return 'red'
-
-        if (type === 'WATER')
-            return 'indigo'
-
-        if (type === 'BUG')
-            return 'teal'
-
-        if (type === 'DARK')
-            return 'dark'
-
-        if (type === 'DRAGON')
-            return 'green'
-
-        if (type === 'ELECTRIC')
-            return 'yellow'
-
-        if (type === 'FAIRY')
-            return 'pink'
-
-        if (type === 'FIGHTING')
-            return 'orange'
-
-        if (type === 'FLYING')
-            return 'gray'
-
-        if (type === 'GHOST')
-            return 'violet'
-
-        if (type === 'GRASS')
-            return 'green'
-
-        if (type === 'GROUND')
-            return 'orange'
-
-        if (type === 'ICE')
-            return ''
-
-        if (type === 'POISON')
-            return 'violet'
-
-        if (type === 'PSYCHIC')
-            return 'grape'
-
-        if (type === 'ROCK')
-            return 'gray'
-
-        if (type === 'STEEL')
-            return 'gray'
-
-        if (type === 'NORMAL')
-            return 'black'
-    }
-
-    const EmojiHelper = (type: string) => {
-        if (type === 'FIRE')
-            return '🔥'
-
-        if (type === 'WATER')
-            return '🌊'
-
-        if (type === 'BUG')
-            return '🪲'
-
-        if (type === 'DARK')
-            return '🌙'
-
-        if (type === 'DRAGON')
-            return '🐉'
-
-        if (type === 'ELECTRIC')
-            return '⚡'
-
-        if (type === 'FAIRY')
-            return '🧚'
-
-        if (type === 'FIGHTING')
-            return '👊🏽'
-
-        if (type === 'FLYING')
-            return '🦅'
-
-        if (type === 'GHOST')
-            return '👻'
-
-        if (type === 'GRASS')
-            return '🌿'
-
-        if (type === 'GROUND')
-            return '🧱'
-
-        if (type === 'ICE')
-            return '❄️'
-
-        if (type === 'POISON')
-            return '☠️'
-
-        if (type === 'PSYCHIC')
-            return '🔮'
-
-        if (type === 'ROCK')
-            return '🪨'
-
-        if (type === 'STEEL')
-            return '🛡️'
-
-        if (type === 'NORMAL')
-            return '💢'
-    }
-
-    const features = data?.types.map((e) => (
+    /**
+     * @remarks
+     * This function is for create Array of DOM and add data base on items map
+     *
+     * @param e - item itself
+     * @param i - item index
+     * @returns DOM Array with data
+     */
+    const features = data?.types.map((e, i) => (
         <Badge
-            color={PokemonTypeBadgeColor(e.type.name.toUpperCase())}
-            key={e.type.name}
-            leftSection={EmojiHelper(e.type.name.toUpperCase())}
+            color={getProperPokemonBadgeColor(e.type.name.toUpperCase())}
+            key={i}
+            leftSection={getProperPokemonBadgeEmoji(e.type.name.toUpperCase())}
         >
             {e.type.name}
         </Badge>
     ));
     //#endregion
 
+    //#region Handle
+    const handleShowDetails = () => {
+        router.push(`/pokemon-details?name=${data?.name}`)
+    }
+    //#endregion
+
     return (
         <>
             {
                 loading ? (
-                    <Card withBorder radius="md" p="md" className={classes.card} key={data?.id}>
+                    <Card withBorder radius="md" p="md" className={classes.card}>
                         <Card.Section>
                             <Skeleton height={200} />
                         </Card.Section>
@@ -207,7 +104,7 @@ const PCard = ({ name, url, loading, setLoading }: IPokemonBasic) => {
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
                         <Card withBorder radius="md" p="md" className={classes.card} key={data?.id}>
                             <Card.Section sx={{ backgroundImage: 'url(/poke-bg.jpg)', backgroundSize: 'cover' }}>
-                                <Image imageProps={{ loading: "lazy" }} src={PokemonImg(data?.sprites.front_default)} alt={name} height={200} fit="contain" />
+                                <Image imageProps={{ loading: "lazy" }} src={getProperPokemonImg(data?.sprites.front_default)} alt={name} height={200} fit="contain" />
                             </Card.Section>
 
                             <Card.Section className={classes.section} mt="md">
@@ -228,7 +125,7 @@ const PCard = ({ name, url, loading, setLoading }: IPokemonBasic) => {
                             </Card.Section>
 
                             <Group mt="xs">
-                                <Button radius="md" style={{ flex: 1 }}>
+                                <Button radius="md" style={{ flex: 1 }} onClick={handleShowDetails}>
                                     Show details
                                 </Button>
                             </Group>
