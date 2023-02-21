@@ -14,13 +14,19 @@ const openai = new OpenAIApi(configuration)
 export const openAIService = {
     createCompletion: async (pokemon: string) => {
 
-        return await openai.createCompletion({
+        try {
+            const data = await openai.createCompletion({
 
-            // Just change the model if response is too slow
-            model: "text-davinci-002",
-            prompt: `${pokemon} description?`,
-            temperature: 0,
-            max_tokens: 100,
-        })
+                // Just change the model if response is too slow
+                model: "text-davinci-002",
+                prompt: `${pokemon} description?`,
+                temperature: 0,
+                max_tokens: 100,
+            })
+    
+            return data;
+        } catch (error) {
+            return null
+        }
     }
 }

@@ -1,5 +1,5 @@
 //#region Imports
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PCard from '@/core/components/_card';
 import AppLayout from '@/core/layout';
 import {
@@ -16,16 +16,13 @@ import {
 	useMantineTheme,
 	Text
 } from '@mantine/core';
-import { useKey } from 'react-use';
 import { ReactElement } from 'react'
-import { Search, Refresh, ArrowRight, TextPlus, StairsUp } from 'tabler-icons-react';
+import { Search, Refresh, ArrowRight } from 'tabler-icons-react';
 import { NextPageWithLayout } from './_app'
 import { pokemonService } from './api/pokemonService'
-import { useQueries, useQuery, useIsFetching } from 'react-query';
-import { motion } from "framer-motion";
+import { useQuery, useIsFetching } from 'react-query';
 import { IApiResult, IPokemonBasic } from '@/core/interface/Pokemon';
 import { useRouter } from 'next/router';
-import ReactPaginate from 'react-paginate';
 import { useDebouncedState } from '@mantine/hooks';
 
 const { fetchPokemons } = pokemonService
@@ -65,13 +62,9 @@ const Page: NextPageWithLayout = () => {
 	const theme = useMantineTheme();
 	const isFetching = useIsFetching();
 	const router = useRouter();
-
-	useKey('ArrowLeft', () => alert('You click arrow left'))
-	useKey('ArrowRight', () => alert('You click arrow right'))
 	//#endregion
 
 	//#region States
-
 
 	// Pagination
 	const [offset, setOffset] = useState<number>(0)
@@ -92,6 +85,46 @@ const Page: NextPageWithLayout = () => {
 	const { data, isSuccess } = useQuery<IApiResult>("pokemons", () => fetchPokemons(1279, offset))
 	//#endregion
 
+	//#region Callback
+	const callBackKeyCode = useCallback((e: any) => {
+
+		const { code } = e
+
+		// For next page
+		if (code === 'ArrowRight') {
+
+			if (initialPage !== totalPageCount) {
+				setInitialPage(initialPage + 1)
+				setOffset(18 * initialPage)
+			}
+		}
+
+		if (code === 'ArrowLeft') {
+			if (initialPage !== 1) {
+
+				// Get the Absolute Page
+				// eg. Current page is 4, since we are going to page 3 we need to subtract 1
+				const absolutePage = initialPage - 1
+
+				// Get the Absolute Offset
+				// eg. We are going to page 3, so we need to get the 2 remaining pages so we can check how many offset we need: 
+				// eg. We are at page 4, then we click the left. So basically we are going thru page 3
+				const absoluteOffSet = absolutePage - 1;
+
+				// Get the Offset Multiplier
+				// eg. We are now at page 3, and we already get the 2 remaining pages which is absoluteOffSet
+				// eg. Multiply the absoluteOffset to 18 (itemsPerPage)
+				const offSetMultiplier = itemsPerPage * absoluteOffSet
+
+				setInitialPage(absolutePage)
+				setOffset(absolutePage === 1 ? 0 : offSetMultiplier)
+			}
+		}
+
+
+	}, [initialPage, offset])
+	//#endregion
+
 	//#region UseEffect
 	useEffect(() => {
 		if (isFetching === 0)
@@ -103,6 +136,13 @@ const Page: NextPageWithLayout = () => {
 	useEffect(() => {
 		handlePagination()
 	}, [data, searchKey, offset])
+
+	useEffect(() => {
+		document.addEventListener('keydown', callBackKeyCode);
+		return () => {
+			document.removeEventListener('keydown', callBackKeyCode);
+		}
+	}, [callBackKeyCode])
 	//#endregion
 
 	//#region Handle
@@ -185,9 +225,9 @@ const Page: NextPageWithLayout = () => {
 								direction="row"
 								wrap="wrap"
 							>
-								<Kbd>Ctrl</Kbd> + <Kbd>→</Kbd>
+								<Kbd>←</Kbd>
 								<Text>=</Text>
-								<Text>Next Page</Text>
+								<Text>Prev Page</Text>
 							</Flex>
 						</Center>
 					</Grid.Col>
@@ -201,9 +241,9 @@ const Page: NextPageWithLayout = () => {
 								direction="row"
 								wrap="wrap"
 							>
-								<Kbd>Ctrl</Kbd> + <Kbd>←</Kbd>
+								<Kbd>→</Kbd>
 								<Text>=</Text>
-								<Text>Prev Page</Text>
+								<Text>Next Page</Text>
 							</Flex>
 						</Center>
 					</Grid.Col>
@@ -225,7 +265,7 @@ const Page: NextPageWithLayout = () => {
 				isFetching ? (
 					""
 				) : (
-					<Center mt={50}>
+					<Center mt={30} mb={20}>
 						<Pagination total={totalPageCount} initialPage={initialPage} radius="md" onChange={handlePageClick} withEdges />
 					</Center>
 				)
