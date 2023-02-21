@@ -1,16 +1,19 @@
 //#region Import
-import { Card, Image, Text, Group, Badge, Button, ActionIcon, createStyles, Loader, Skeleton } from '@mantine/core';
-import React, { Dispatch, useState } from 'react';
+import { Card, Image, Text, Group, Badge, Button, createStyles, Skeleton } from '@mantine/core';
+
+import { useEffect } from 'react';
 import { useQuery } from 'react-query';
-import { Heart } from 'tabler-icons-react';
 import { IPCard } from '../interface/PCard';
 import { motion } from "framer-motion";
 import { useRouter } from 'next/router';
-import { IPokemonBasic } from '../interface/Pokemon';
+import { IPokemonBasic, IPokemonEvolution, IPokemonSpecies } from '../interface/Pokemon';
 import { helpers } from '../helpers/helper';
 import { pokemonService } from '@/pages/api/pokemonService';
+import { usePokemonEvolutionStore, usePokemonSpeciesStore, usePokemonStore } from '../zustand/store';
+import { PartialEvolution, PartialPCard, PartialSpecies } from '../partial/_pPokemon';
 
-const { fetchPokemon } = pokemonService;
+
+const { fetchPokemon, fetchPokemonSpeciesDetailsByUrl, fetchPokemonEvolutionDetails } = pokemonService;
 const { getProperPokemonBadgeColor, getProperPokemonBadgeEmoji, getProperPokemonImg } = helpers
 //#endregion
 
@@ -45,12 +48,17 @@ const PCard = ({ name, url, loading, setLoading }: IPokemonBasic) => {
     //#region State Helper
     const { classes, theme } = useStyles();
     const router = useRouter();
+
+    // Zustand
+    const storePokemon = usePokemonStore(state => state.storePokemon);
+    const storeSpecies = usePokemonSpeciesStore(state => state.storePokemonSpecies);
+    const storeEvolution = usePokemonEvolutionStore(state => state.storePokemonEvolution);
     //#endregion
 
     //#region Queries
-    const { data, isLoading } = useQuery<IPCard>(name.toUpperCase(), () => fetchPokemon(url))
-
-    if (isLoading) setLoading(true)
+    const pokemonDetails = useQuery<IPCard>(name.toUpperCase(), () => fetchPokemon(url))
+    const pokemonSpeciesDetails = useQuery<IPokemonSpecies>(`${pokemonDetails.data?.name}-species-details`, () => fetchPokemonSpeciesDetailsByUrl(pokemonDetails.data === undefined ? "" : pokemonDetails.data.species.url), { refetchOnWindowFocus: false, enabled: false })
+    const pokemonEvolutionDetails = useQuery<IPokemonEvolution>(`${pokemonDetails.data?.name}-evolution-details`, () => fetchPokemonEvolutionDetails(pokemonSpeciesDetails.data === undefined ? "" : pokemonSpeciesDetails.data?.evolution_chain.url), { enabled: false })
 
     /**
      * @remarks
@@ -60,7 +68,7 @@ const PCard = ({ name, url, loading, setLoading }: IPokemonBasic) => {
      * @param i - item index
      * @returns DOM Array with data
      */
-    const features = data?.types.map((e, i) => (
+    const features = pokemonDetails.data?.types.map((e, i) => (
         <Badge
             color={getProperPokemonBadgeColor(e.type.name.toUpperCase())}
             key={i}
@@ -71,9 +79,31 @@ const PCard = ({ name, url, loading, setLoading }: IPokemonBasic) => {
     ));
     //#endregion
 
+    //#region UseEffect
+    useEffect(() => {
+
+        if (pokemonSpeciesDetails.data !== undefined && pokemonEvolutionDetails.data === undefined)
+            pokemonEvolutionDetails.refetch()
+
+        if (pokemonSpeciesDetails.data !== undefined && pokemonEvolutionDetails.data !== undefined)
+            handleRouteNavigation()
+
+    }, [pokemonSpeciesDetails.data, pokemonEvolutionDetails.data])
+    //#endregion
+
     //#region Handle
     const handleShowDetails = () => {
-        router.push(`/pokemon-details?name=${data?.name}`)
+        pokemonSpeciesDetails.refetch()
+    }
+
+    const handleRouteNavigation = () => {
+
+        storePokemon(pokemonDetails.data === undefined ? PartialPCard : pokemonDetails.data)
+        storeSpecies(pokemonSpeciesDetails.data === undefined ? PartialSpecies : pokemonSpeciesDetails.data)
+        storeEvolution(pokemonEvolutionDetails.data === undefined ? PartialEvolution : pokemonEvolutionDetails.data)
+
+        router.push(`/pokemon-details?name=${pokemonDetails.data?.name}`)
+
     }
     //#endregion
 
@@ -102,15 +132,15 @@ const PCard = ({ name, url, loading, setLoading }: IPokemonBasic) => {
                     </Card>
                 ) : (
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                        <Card withBorder radius="md" p="md" className={classes.card} key={data?.id}>
+                        <Card withBorder radius="md" p="md" className={classes.card} key={pokemonDetails.data?.id}>
                             <Card.Section sx={{ backgroundImage: 'url(/poke-bg.jpg)', backgroundSize: 'cover' }}>
-                                <Image imageProps={{ loading: "lazy" }} src={getProperPokemonImg(data?.sprites.front_default)} alt={name} height={200} fit="contain" />
+                                <Image imageProps={{ loading: "lazy" }} src={getProperPokemonImg(pokemonDetails.data?.sprites.front_default)} alt={name} height={200} fit="contain" />
                             </Card.Section>
 
                             <Card.Section className={classes.section} mt="md">
                                 <Group position="apart">
                                     <Text size="lg" weight={500} truncate>
-                                        {data?.name.toUpperCase()}
+                                        {pokemonDetails.data?.name.toUpperCase()}
                                     </Text>
                                 </Group>
                             </Card.Section>

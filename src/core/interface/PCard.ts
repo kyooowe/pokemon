@@ -1,12 +1,13 @@
-import { IPokemonAbilities, IPokemonMoves, IPokemonSpecies, IPokemonSprites, IPokemonStats, IPokemonTypes } from "./Pokemon";
+import { PartialAbilities, PartialMoves, PartialSpecies, PartialSprites, PartialStats, PartialTypes } from "../partial/_pPokemon";
+import { IPokemonAbilities, IPokemonMoves, IPokemonSpecies, IPokemonSpeciesBasic, IPokemonSprites, IPokemonStats, IPokemonTypes } from "./Pokemon";
 
 interface IPCard {
   id: number;
-  name: string;
+  name: "",
   height: number;
   weigth: number;
   sprites: IPokemonSprites;
-  species: IPokemonSpecies;
+  species: IPokemonSpeciesBasic;
   stats: IPokemonStats[];
   abilities: IPokemonAbilities[];
   moves: IPokemonMoves[];

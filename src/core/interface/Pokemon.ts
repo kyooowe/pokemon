@@ -55,23 +55,19 @@ interface IPokemonSprites {
 
         }
     }
-    versions: {
-        'generation-i': {
-
-        }
-    }
 }
 
 interface IPokemonImages {
     url: string;
 }
 
-interface IPokemonSpecies {
+interface IPokemonSpeciesBasic {
     name: string;
     url: string;
 }
 
-interface IPokemonDetails {
+interface IPokemonSpecies {
+    id: number;
     base_happiness: string;
     capture_rate: string;
     egg_groups: [
@@ -107,6 +103,41 @@ interface IPokemonDetails {
         }
     ]
 }
+
+interface IPokemonEvolution {
+    chain: {
+        evolves_to: {
+            evolves_to: {
+                evolves_to: {
+                    species: {
+                        name: string;
+                        url: string;
+                    }
+                }[]
+                species: {
+                    name: string;
+                    url: string;
+                }
+            }[]
+            species: {
+                name: string;
+                url: string;
+            }
+        }[]
+        species: {
+            name: string;
+            url: string;
+        }
+    }
+}
+
+interface IPokemonEvolutionOrder {
+    name: string;
+    imageUrl: string;
+    order: number;
+    id: Promise<number>;
+    description: string;
+}
 //#endregion
 
 interface IApiResult {
@@ -121,4 +152,19 @@ interface IAccordionDetails {
     description: string;
 }
 
-export type { IApiResult, IPokemonBasic, IPokemonAbilities, IPokemonStats, IPokemonMoves, IPokemonMoveDetails, IPokemonTypes, IPokemonSprites, IPokemonImages,  IPokemonSpecies, IPokemonDetails, IAccordionDetails };
+export type {
+    IApiResult,
+    IPokemonBasic,
+    IPokemonAbilities,
+    IPokemonStats,
+    IPokemonMoves,
+    IPokemonMoveDetails,
+    IPokemonTypes,
+    IPokemonSprites,
+    IPokemonImages,
+    IPokemonSpeciesBasic,
+    IPokemonSpecies,
+    IPokemonEvolution,
+    IPokemonEvolutionOrder,
+    IAccordionDetails
+};

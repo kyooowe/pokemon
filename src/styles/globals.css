@@ -25,3 +25,8 @@
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
 }
+
+.mantine-Timeline-itemBullet {
+    background-image: url('/poke-bg.jpg');
+    background-size: cover;
+}
