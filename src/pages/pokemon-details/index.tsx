@@ -1,8 +1,30 @@
 //#endregion Import
 import AppLayout from "@/core/layout";
-import { ReactElement, useState, useEffect } from "react";
+import { ReactElement, useState, useEffect, useCallback } from "react";
 import { NextPageWithLayout } from "../_app";
-import { createStyles, Flex, Image, Title, Badge, Group, Grid, useMantineTheme, Avatar, Paper, Center, Accordion, Text, Kbd, Container, Divider, ScrollArea, Timeline, Tooltip, Loader } from '@mantine/core';
+import {
+    createStyles,
+    Anchor,
+    Flex,
+    Image,
+    Title,
+    Badge,
+    Group,
+    Grid,
+    useMantineTheme,
+    Avatar,
+    Paper,
+    Center,
+    Accordion,
+    Text,
+    Kbd,
+    Container,
+    Divider,
+    ScrollArea,
+    Timeline,
+    Loader,
+    Breadcrumbs
+} from '@mantine/core';
 import { useMutation } from 'react-query'
 import { useRouter } from "next/router";
 import { useMediaQuery } from "@mantine/hooks";
@@ -20,6 +42,11 @@ const { createCompletion } = openAIService
 
 //#region Styles
 const useStyles = createStyles((theme) => ({
+
+    loader: {
+        marginTop: '40%'
+    },
+
     card: {
         height: 350,
         width: '100%'
@@ -97,10 +124,25 @@ const Page: NextPageWithLayout = () => {
     const [modalTitle, setModalTitle] = useState<string>("")
     //#endregion
 
+    //#region Callback
+    const callBackKeyCode = useCallback((e: any) => {
+
+        const { code } = e
+
+        if (code === 'Backspace') {
+            setLoading(true)
+            router.push('/')
+        }
+
+    }, [])
+    //#endregion
+
     //#region UseEffect
     useEffect(() => {
-        if (pokemonDetails.id === 0)
+        if (pokemonDetails.id === 0) {
+            setLoading(true)
             router.push('/')
+        }
         else
             getProperEvolution()
     }, [])
@@ -111,6 +153,13 @@ const Page: NextPageWithLayout = () => {
             getPokemonDescription()
 
     }, [pokemonEvolutionDetailed])
+
+    useEffect(() => {
+        document.addEventListener('keydown', callBackKeyCode);
+        return () => {
+            document.removeEventListener('keydown', callBackKeyCode);
+        }
+    }, [callBackKeyCode])
     //#endregion
 
     //#region Helper
@@ -373,6 +422,13 @@ const Page: NextPageWithLayout = () => {
         </Timeline.Item>
     ))
 
+    const breadCrumbs = [{ title: 'HOME', href: '/' }, { title: pokemonDetails.name.toUpperCase(), href: '#' }].map(
+        (e, i) => (
+            <Anchor href={e.href} key={i}>
+                <Text fw={500}>{e.title}</Text>
+            </Anchor>
+        )
+    )
     //#endregion
 
     //#region Reusable Components
@@ -411,11 +467,27 @@ const Page: NextPageWithLayout = () => {
     const getPokemonDescription = async () => {
 
         let emptyPokemonEvolutionDetailed: IPokemonEvolutionOrder[] = []
+        let isOpenAIAlreadyError = false
 
         for (const pokemon of pokemonEvolutionDetailed) {
 
-            const openai = await createCompletion(pokemon.name)
-            pokemon.description = openai.data.choices[0].text === undefined ? "" : openai.data.choices[0].text
+            // Check if OpenAI is already error in previous data
+            if (isOpenAIAlreadyError) {
+                pokemon.description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vehicula tempus ipsum, vitae efficitur erat condimentum id. Praesent erat libero, maximus sed lobortis et, consequat nec ligula. Maecenas congue tellus a augue suscipit, at ultrices ex pretium."
+            }
+            else {
+
+                // Call OpenAI API
+                const openai = await createCompletion(pokemon.name)
+
+                // OpenAI Flagger
+                if (openai !== null)
+                    pokemon.description = openai.data.choices[0].text === undefined ? "" : openai.data.choices[0].text
+                else {
+                    pokemon.description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vehicula tempus ipsum, vitae efficitur erat condimentum id. Praesent erat libero, maximus sed lobortis et, consequat nec ligula. Maecenas congue tellus a augue suscipit, at ultrices ex pretium."
+                    isOpenAIAlreadyError = true
+                }
+            }
 
             emptyPokemonEvolutionDetailed.push(pokemon)
         }
@@ -429,14 +501,18 @@ const Page: NextPageWithLayout = () => {
         <>
             {
                 loading ? (
-                    <Center>
-                        <Loader mt={30} variant="bars" />
+                    <Center className={classes.loader}>
+                        <Loader variant="bars" />
                     </Center>
                 ) : (
                     <>
                         <MoveSetModal show={modalShow} setShow={setModalShow} url={modalUrl} title={modalTitle} />
-                        <Paper shadow="sm" radius="lg" p="lg" withBorder>
-                            <Text><b>Keyboard Shortcuts</b><span className={classes.paperSpan}> (under experimentation)</span></Text>
+                        <div>
+                            <Breadcrumbs>{breadCrumbs}</Breadcrumbs>
+                        </div>
+
+                        <Paper shadow="sm" radius="lg" p="lg" mt={15} withBorder>
+                            <Text><b>Keyboard Shortcuts</b><span className={classes.paperSpan}> (under experimentation & ongoing keys to be added)</span></Text>
                             <Grid columns={12} mt={15}>
                                 <Grid.Col xs={6} sm={6} md={6} lg={6}>
                                     <Center>
@@ -448,9 +524,9 @@ const Page: NextPageWithLayout = () => {
                                             direction="row"
                                             wrap="wrap"
                                         >
-                                            <Kbd>Ctrl</Kbd> + <Kbd>→</Kbd>
+                                            <Kbd>Back Space</Kbd>
                                             <Text>=</Text>
-                                            <Text>Next Pokemon</Text>
+                                            <Text>Go to Main Page</Text>
                                         </Flex>
                                     </Center>
                                 </Grid.Col>
@@ -464,9 +540,9 @@ const Page: NextPageWithLayout = () => {
                                             direction="row"
                                             wrap="wrap"
                                         >
-                                            <Kbd>Ctrl</Kbd> + <Kbd>←</Kbd>
+                                            <Kbd>NULL</Kbd> + <Kbd>NULL</Kbd>
                                             <Text>=</Text>
-                                            <Text>Prev Pokemon</Text>
+                                            <Text>NULL</Text>
                                         </Flex>
                                     </Center>
                                 </Grid.Col>
@@ -598,7 +674,7 @@ const Page: NextPageWithLayout = () => {
                                     {/* Evolution */}
                                     <Accordion.Item value="Evolution">
                                         <Accordion.Control>
-                                            <AccordionPlainDetails label="Evolution" description="Most Pokémon evolve when they reach or surpass a certain level. Once such a Pokémon has reached the required level." />
+                                            <AccordionPlainDetails label="Evolution (Powered by OpenAI)" description="Most Pokémon evolve when they reach or surpass a certain level. Once such a Pokémon has reached the required level." />
                                         </Accordion.Control>
                                         <Accordion.Panel>
                                             <Center>

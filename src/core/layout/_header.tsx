@@ -100,7 +100,7 @@ const useStyles = createStyles((theme) => ({
 //#endregion
 
 const AppHeader = ({ links }: IHeader) => {
-	
+
 	//#region State Helper
 	const [opened, { toggle }] = useDisclosure(false);
 	const [active, setActive] = useState(links[0].link);
@@ -141,10 +141,12 @@ const AppHeader = ({ links }: IHeader) => {
 				<Skeleton height={40} circle mb="xl" className={classes.logo} />
 
 				<Group spacing={0} className={classes.social} position="right" noWrap>
-					<ActionIcon size="lg" variant='transparent'>
+
+					<ActionIcon size="lg" variant='transparent' onClick={() => window.open('https://github.com/kyooowe')}>
 						<BrandGithub size={18} strokeWidth={1.5} color="#ffffff" />
 					</ActionIcon>
-					<ActionIcon size="lg" variant='transparent'>
+					
+					<ActionIcon size="lg" variant='transparent' onClick={() => window.open('https://www.facebook.com/iAMSyntrax.14/')}>
 						<BrandFacebook size={18} strokeWidth={1.5} color="#ffffff" />
 					</ActionIcon>
 				</Group>
