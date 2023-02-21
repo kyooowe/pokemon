@@ -88,8 +88,6 @@ const Page: NextPageWithLayout = () => {
 
     // Evolution State
     const [pokemonEvolutionDetailed, setPokemonEvolutionDetailed] = useState<IPokemonEvolutionOrder[]>([])
-    const [firstEvolutionPokemonName, setFirstEvolutionPokemonName] = useState<string>("")
-    const [lastEvolutionPokemonName, setLastEvolutionPokemonName] = useState<string>("")
     const [evolutionCurrentOrder, setEvolutionCurrentOrder] = useState<number>(0)
     const [pokemonUniqueEvolution, setPokemonUniqueEvolution] = useState<boolean>(false)
 
@@ -198,7 +196,6 @@ const Page: NextPageWithLayout = () => {
             }
 
             pokemonEvolutionDetailed.push(firstEvolution)
-            setFirstEvolutionPokemonName(firstEvolution.name)
             setPokemonUniqueEvolution(true)
 
             pokemonEvolutionDetails.chain.evolves_to.forEach(async (e, i) => {
@@ -231,10 +228,11 @@ const Page: NextPageWithLayout = () => {
                 description: ""
             }
 
-            pokemonEvolutionDetailed.push(firstEvolution)
-            setFirstEvolutionPokemonName(firstEvolution.name)
-            setPokemonUniqueEvolution(false)
+            if (firstEvolution.name === pokemonDetails.name)
+                setEvolutionCurrentOrder(1)
 
+            pokemonEvolutionDetailed.push(firstEvolution)
+            setPokemonUniqueEvolution(false)
 
             // Next Evolution
             pokemonEvolutionDetails.chain.evolves_to.forEach(async (e, i) => {
@@ -250,6 +248,9 @@ const Page: NextPageWithLayout = () => {
                     description: ""
 
                 }
+
+                if (secondEvolution.name === pokemonDetails.name)
+                    setEvolutionCurrentOrder(2)
 
                 pokemonEvolutionDetailed.push(secondEvolution)
 
@@ -268,8 +269,10 @@ const Page: NextPageWithLayout = () => {
                             description: ""
                         }
 
+                        if (thirdEvolution.name === pokemonDetails.name)
+                            setEvolutionCurrentOrder(3)
+
                         pokemonEvolutionDetailed.push(thirdEvolution)
-                        setLastEvolutionPokemonName(thirdEvolution.name)
 
                         // checking for fourth evolution. If not equals to 0, continue;
                         if (e1.evolves_to.length !== 0) {
@@ -286,8 +289,10 @@ const Page: NextPageWithLayout = () => {
                                     description: ""
                                 }
 
+                                if (fourthEvolution.name === pokemonDetails.name)
+                                    setEvolutionCurrentOrder(4)
+
                                 pokemonEvolutionDetailed.push(fourthEvolution)
-                                setLastEvolutionPokemonName(fourthEvolution.name)
 
                             })
                         }
@@ -297,10 +302,6 @@ const Page: NextPageWithLayout = () => {
             })
         }
 
-        // Get Current Order
-        const currentPokemonOrder = pokemonEvolutionDetailed.find((e) => e.name === pokemonDetails.name)
-
-        setEvolutionCurrentOrder(currentPokemonOrder === undefined ? 0 : currentPokemonOrder.order)
         setPokemonEvolutionDetailed(pokemonEvolutionDetailed)
     }
     //#endregion
