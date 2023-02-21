@@ -68,7 +68,7 @@ const MoveSetModal = ({ show, setShow, title, url }: IMovesetModal) => {
             {
                 isLoading ? (
                     <Center>
-                        <Loader mt={30} variant="bars" />
+                        <Loader mt={30} mb={30} variant="bars" />
                     </Center>
                 ) : (
                     <div className={classes.container}>
