@@ -146,17 +146,12 @@ const Page: NextPageWithLayout = () => {
 	//#endregion
 
 	//#region Handle
-	const handleSearch = () => {
-		if (searchKey !== "") {
-			router.push(`/pokemon-details?name=${searchKey}`)
-		}
-	}
 
 	const handlePagination = () => {
 		if (data?.results !== undefined) {
 
 			const endOffSet = offset + itemsPerPage;
-			const currentItems = searchKey === "" ? data.results.slice(offset, endOffSet) : data.results.filter((e) => e.name.includes(searchKey)).slice(offset, endOffSet)
+			const currentItems = searchKey === "" ? data.results.slice(offset, endOffSet) : data.results.filter((e) => e.name.toLowerCase().includes(searchKey.toLowerCase())).slice(offset, endOffSet)
 
 			// For search: at the top is the currentItems with already sliced data
 			// So this functions helps the exact page count 
@@ -182,6 +177,12 @@ const Page: NextPageWithLayout = () => {
 
 		window.scrollTo({ top: 0, behavior: 'smooth' })
 	}
+
+	const handleRefreshClick = () => {
+		setSearchKey("")
+		setInitialPage(1)
+		setOffset(0)
+	}
 	//#endregion
 
 	return (
@@ -192,7 +193,7 @@ const Page: NextPageWithLayout = () => {
 				justify={{ sm: 'flex-start' }}
 			>
 				<Tooltip label="Refresh">
-					<ActionIcon size={38} radius="xl" color="teal" variant="filled">
+					<ActionIcon size={38} radius="xl" color="teal" variant="filled" onClick={() => handleRefreshClick()}>
 						<Refresh size={18} />
 					</ActionIcon>
 				</Tooltip>
@@ -202,11 +203,6 @@ const Page: NextPageWithLayout = () => {
 					size="md"
 					className={classes.input}
 					onChange={(e) => setSearchKey(e.target.value)}
-					rightSection={
-						<ActionIcon size={32} radius="xl" color={theme.primaryColor} variant="filled" onClick={handleSearch} disabled={isChildLoading}>
-							<ArrowRight size={18} strokeWidth={1.5} />
-						</ActionIcon>
-					}
 					placeholder="Search pokemon.."
 					rightSectionWidth={42}
 				/>
