@@ -36,6 +36,16 @@ export const pokemonService = {
         return res.json();
     },
 
+    fetchPokemonSpeciesDetailsByUrl: async (url: string) => {
+        const res = await fetch(url);
+        return res.json();
+    },
+
+    fetchPokemonEvolutionDetails: async (url: string) => {
+        const res = await fetch(url);
+        return res.json();
+    },
+
     fetchPokemonMoveset: async (url: string) => {
         const res = await fetch(url);
         return res.json();

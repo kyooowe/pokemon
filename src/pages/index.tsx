@@ -25,6 +25,8 @@ import { useQueries, useQuery, useIsFetching } from 'react-query';
 import { motion } from "framer-motion";
 import { IApiResult, IPokemonBasic } from '@/core/interface/Pokemon';
 import { useRouter } from 'next/router';
+import ReactPaginate from 'react-paginate';
+import { useDebouncedState } from '@mantine/hooks';
 
 const { fetchPokemons } = pokemonService
 //#endregion
@@ -70,23 +72,24 @@ const Page: NextPageWithLayout = () => {
 
 	//#region States
 
+
 	// Pagination
-	const [limit, setLimit] = useState<number>(18)
 	const [offset, setOffset] = useState<number>(0)
 	const [initialPage, setInitialPage] = useState<number>(1)
-	const [totalPage, setTotalPage] = useState<number>(0)
-	const [isPaginationChange, setIsPaginationChange] = useState<boolean>(false);
+	const [itemsPerPage, setItemsPerPage] = useState<number>(18)
+	const [currentItems, setCurrentItems] = useState<IPokemonBasic[]>([])
+	const [totalPageCount, setTotalPageCount] = useState<number>(0)
 
 	// Child Component: Card
 	const [isChildLoading, setIsChildLoading] = useState<boolean>(false)
 
 	// Search
-	const [searchKey, setSearchKey] = useState<string>("")
+	const [searchKey, setSearchKey] = useDebouncedState("", 300)
 
 	//#endregion
 
 	//#region Queries
-	const { data, refetch } = useQuery<IApiResult>("pokemons", () => fetchPokemons(limit, offset))
+	const { data, isSuccess } = useQuery<IApiResult>("pokemons", () => fetchPokemons(1279, offset))
 	//#endregion
 
 	//#region UseEffect
@@ -98,30 +101,35 @@ const Page: NextPageWithLayout = () => {
 	}, [isFetching])
 
 	useEffect(() => {
-		if (isPaginationChange) {
-			setIsChildLoading(true)
-			refetch()
-		}
-	}, [offset])
-
-	useEffect(() => {
-		getTotalPages()
-	}, [data])
-	//#endregion
-
-	//#region Helper Get/Handle
-	const getTotalPages = () => {
-		if (data?.count === null || data?.count === undefined)
-			setTotalPage(1)
-		else
-			setTotalPage(data && data.count / limit)
-	}
+		handlePagination()
+	}, [data, searchKey, offset])
 	//#endregion
 
 	//#region Handle
-	const handlePagination = (e: number) => {
-		setIsPaginationChange(true)
+	const handleSearch = () => {
+		if (searchKey !== "") {
+			router.push(`/pokemon-details?name=${searchKey}`)
+		}
+	}
 
+	const handlePagination = () => {
+		if (data?.results !== undefined) {
+
+			const endOffSet = offset + itemsPerPage;
+			const currentItems = searchKey === "" ? data.results.slice(offset, endOffSet) : data.results.filter((e) => e.name.includes(searchKey)).slice(offset, endOffSet)
+
+			// For search: at the top is the currentItems with already sliced data
+			// So this functions helps the exact page count 
+			const searchTotalCurrentItems = searchKey === "" ? [] : data.results.filter((e) => e.name.includes(searchKey))
+
+			const pageCount = searchKey === "" ? Math.ceil(data.results.length / itemsPerPage) : Math.ceil(searchTotalCurrentItems.length / itemsPerPage)
+
+			setCurrentItems(currentItems)
+			setTotalPageCount(pageCount)
+		}
+	}
+
+	const handlePageClick = (e: number) => {
 		if (e === 1) {
 			setOffset(0)
 			setInitialPage(1)
@@ -132,18 +140,7 @@ const Page: NextPageWithLayout = () => {
 			setInitialPage(e)
 		}
 
-		window.scrollTo({top: 0, behavior: 'smooth' })
-	}
-
-	const handleRefresh = () => {
-		setOffset(0)
-		setInitialPage(1)
-	}
-
-	const handleSearch = () => {
-		if(searchKey !== "") {
-			router.push(`/pokemon-details?name=${searchKey}`)
-		}
+		window.scrollTo({ top: 0, behavior: 'smooth' })
 	}
 	//#endregion
 
@@ -155,7 +152,7 @@ const Page: NextPageWithLayout = () => {
 				justify={{ sm: 'flex-start' }}
 			>
 				<Tooltip label="Refresh">
-					<ActionIcon size={38} radius="xl" color="teal" variant="filled" onClick={handleRefresh} disabled={initialPage === 1 ? true : false}>
+					<ActionIcon size={38} radius="xl" color="teal" variant="filled">
 						<Refresh size={18} />
 					</ActionIcon>
 				</Tooltip>
@@ -215,7 +212,7 @@ const Page: NextPageWithLayout = () => {
 
 			<Grid columns={12} mt={15}>
 				{
-					data?.results.map((pokeBasic: IPokemonBasic, i) => {
+					currentItems && currentItems.map((pokeBasic: IPokemonBasic, i) => {
 						return (
 							<Grid.Col xs={6} sm={6} md={4} lg={4} key={i}>
 								<PCard name={pokeBasic.name} url={pokeBasic.url} loading={isChildLoading} setLoading={setIsChildLoading} />
@@ -228,8 +225,8 @@ const Page: NextPageWithLayout = () => {
 				isFetching ? (
 					""
 				) : (
-					<Center mt={20}>
-						<Pagination total={totalPage} initialPage={initialPage} radius="md" onChange={handlePagination} withEdges />
+					<Center mt={50}>
+						<Pagination total={totalPageCount} initialPage={initialPage} radius="md" onChange={handlePageClick} withEdges />
 					</Center>
 				)
 			}
